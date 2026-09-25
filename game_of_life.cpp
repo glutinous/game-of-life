@@ -194,9 +194,6 @@ static void Populate()
         int64_t x = 0;
         int64_t y = 0;
         const int scanResult = sscanf_s(buffer, "%" SCNd64 " %" SCNd64, &x, &y);
-        if (scanResult == EOF)
-            break;
-
         if (scanResult != 2)
         {
             printf("Error scanning line: %s\n", buffer);
@@ -261,7 +258,7 @@ static void GrowCells(int genPrev, int genNext)
                     continue;
 
                 const int aliveCount = CountAliveNeighbors(genPrev, xNeighbor, yNeighbor);
-                if (aliveCount)
+                if (aliveCount == 3)
                 {
                     AddCell(genNext, xNeighbor, yNeighbor);
                 }
@@ -291,15 +288,26 @@ static void Step()
 
 static void PrintResults()
 {
-    puts("#Life 1.06");
-
     char buffer[LINE_MAX];
+
+    int printResult = snprintf(buffer, sizeof(buffer), "%s", "#Life 1.06");
+    if (printResult < 0)
+    {
+        puts("Error printing header");
+        exit(-1);
+    }
+
+    puts(buffer);
+#ifdef _WIN32
+    OutputDebugStringA(buffer);
+    OutputDebugStringA("\n");
+#endif
 
     for (int i = 0; i < s_allCellsCount[s_currentGenerationIndex]; ++i)
     {
         const Cell& cell = s_allCells[s_currentGenerationIndex][i];
 
-        const int printResult = snprintf(buffer, sizeof(buffer), "%" PRId64 " %" PRId64, cell.cellX, cell.cellY);
+        printResult = snprintf(buffer, sizeof(buffer), "%" PRId64 " %" PRId64, cell.cellX, cell.cellY);
         if (printResult < 0)
         {
             puts("Error printing result");
